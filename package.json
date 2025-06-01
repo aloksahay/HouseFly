@@ -1,0 +1,26 @@
+{
+  "name": "property-listing-app",
+  "version": "1.0.0",
+  "description": "Property listing app with World ID verification and Akave storage",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "mcp": "ts-node mcp/server.ts"
+  },
+  "dependencies": {
+    "@akave/sdk": "^1.0.0",
+    "@akave/mcp": "^1.0.0",
+    "@worldcoin/idkit": "^1.0.0",
+    "next": "^13.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.1"
+  }
+} 
