@@ -1,16 +1,29 @@
 import { IDKitWidget, VerificationLevel } from '@worldcoin/idkit'
 import { useState, useEffect } from 'react'
-import { Akave } from '@akave/sdk'
+import { Akave, AkaveConfig } from '@akave/sdk'
 
 export default function PropertyListingApp() {
   const [verified, setVerified] = useState(false)
   const [properties, setProperties] = useState([])
   
-  // Initialize Akave client
-  const akave = new Akave({
+  // Initialize Akave client with O3 configuration
+  const akaveConfig: AkaveConfig = {
     clientId: process.env.AKAVE_CLIENT_ID,
-    endpoint: process.env.AKAVE_ENDPOINT
-  })
+    endpoint: 'https://o3-rc1.akave.xyz', // Using the official O3 endpoint
+    o3: {
+      accessKeyId: process.env.AKAVE_O3_ACCESS_KEY_ID,      // AWS CLI compatible
+      secretAccessKey: process.env.AKAVE_O3_SECRET_KEY,     // AWS CLI compatible
+      region: 'akave-network',                              // Default region as per docs
+      bucket: process.env.AKAVE_O3_BUCKET,
+      encryption: true
+    },
+    acl: {
+      enabled: process.env.AKAVE_ACL_ENABLED === 'true',
+      mfa: process.env.AKAVE_MFA_REQUIRED === 'true'
+    }
+  }
+  
+  const akave = new Akave(akaveConfig)
 
   async function handleVerify(proof) {
     // Verify the World ID proof
@@ -33,13 +46,22 @@ export default function PropertyListingApp() {
       return
     }
 
-    // Store property data in Akave
+    // Store property data in Akave with enhanced configuration
     await akave.store({
       type: 'property',
       data: propertyData,
       metadata: {
         verified: true,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        version: '1.0'
+      },
+      options: {
+        // Enable data chunking for large property listings (images, etc)
+        chunking: true,
+        // Enable Merkle tree verification
+        merkleVerification: true,
+        // Set content type for proper handling
+        contentType: 'application/json'
       }
     })
 

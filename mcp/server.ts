@@ -1,52 +1,51 @@
-import { Akave } from '@akave/sdk'
-import { MCPServer } from '@akave/mcp'
+import AkaveMCPServer from 'akave-mcp';
 
-const akave = new Akave({
-  clientId: process.env.AKAVE_CLIENT_ID,
-  endpoint: process.env.AKAVE_ENDPOINT
-})
+const server = new AkaveMCPServer();
 
-const mcpServer = new MCPServer({
-  name: 'property-search',
-  description: 'Natural language property search assistant'
-})
-
-// Handle natural language queries
-mcpServer.on('query', async (query: string) => {
+async function startServer() {
   try {
-    // Search properties in Akave using natural language
-    const properties = await akave.search({
-      type: 'property',
-      query: query,
-      options: {
-        naturalLanguage: true,
-        limit: 10
+    await server.start({
+      port: Number(process.env.MCP_SERVER_PORT) || 3000,
+      host: process.env.MCP_SERVER_HOST || 'localhost',
+      env: {
+        AKAVE_ACCESS_KEY_ID: process.env.AKAVE_O3_ACCESS_KEY_ID,
+        AKAVE_SECRET_ACCESS_KEY: process.env.AKAVE_O3_SECRET_KEY,
+        AKAVE_ENDPOINT_URL: 'https://o3-rc1.akave.xyz'
       }
-    })
+    });
 
-    // Process and format results
-    const formattedResults = properties.map(property => ({
-      id: property.id,
-      address: property.data.address,
-      price: property.data.price,
-      description: property.data.description,
-      amenities: property.data.amenities,
-      verified: property.metadata.verified
-    }))
+    // Handle natural language queries
+    server.on('query', async (query: string) => {
+      try {
+        // Use built-in tools to analyze file content
+        const properties = await server.tools.analyze_file_content(
+          process.env.AKAVE_O3_BUCKET || '',
+          'properties.json',
+          {
+            query,
+            limit: Number(process.env.MCP_MAX_QUERY_RESULTS) || 10
+          }
+        );
 
-    return {
-      success: true,
-      results: formattedResults,
-      message: `Found ${formattedResults.length} properties matching your criteria`
-    }
+        return {
+          success: true,
+          results: properties,
+          message: `Found ${properties.length} properties matching your criteria`
+        };
+      } catch (error) {
+        return {
+          success: false,
+          message: 'Error searching properties',
+          error
+        };
+      }
+    });
+
+    console.log(`MCP Server running on ${process.env.MCP_SERVER_HOST || 'localhost'}:${process.env.MCP_SERVER_PORT || 3000}`);
   } catch (error) {
-    return {
-      success: false,
-      message: 'Error searching properties',
-      error
-    }
+    console.error('Failed to start MCP server:', error);
+    process.exit(1);
   }
-})
+}
 
-// Start the MCP server
-mcpServer.start(3000) 
+startServer(); 
