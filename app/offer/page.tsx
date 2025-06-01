@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { uploadPropertyListing } from '../../utils/akave';
+import WorldIDVerification from '../components/WorldIDVerification';
 
 interface PropertyForm {
   size: string;
@@ -30,11 +31,17 @@ export default function OfferPage() {
   const router = useRouter();
   const [form, setForm] = useState<PropertyForm>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isVerified) {
+      setError('Please verify with World ID first');
+      return;
+    }
+    
     setIsSubmitting(true);
-
     try {
       await uploadPropertyListing({
         ...form,
@@ -44,7 +51,7 @@ export default function OfferPage() {
       router.push('/success');
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Failed to submit listing. Please try again.');
+      setError('Failed to submit listing. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -59,7 +66,7 @@ export default function OfferPage() {
   };
 
   return (
-    <main className="py-10">
+    <div className="py-10">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl">
           <form onSubmit={handleSubmit} className="space-y-8 px-4 py-6 sm:p-8">
@@ -70,7 +77,25 @@ export default function OfferPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
+            {/* World ID Verification */}
+            {!isVerified && (
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-sm font-medium leading-6 text-gray-900 mb-4">Verification Required</h3>
+                <WorldIDVerification
+                  onSuccess={() => {
+                    setIsVerified(true);
+                    setError(null);
+                  }}
+                  onError={(error) => setError(error)}
+                />
+                {error && (
+                  <p className="mt-2 text-sm text-rose-600">{error}</p>
+                )}
+              </div>
+            )}
+
+            {/* Form Fields */}
+            <div className={`grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 ${!isVerified ? 'opacity-50 pointer-events-none' : ''}`}>
               <div className="sm:col-span-1">
                 <label htmlFor="size" className="block text-sm font-medium leading-6 text-gray-900">
                   Size (sqm)
@@ -82,7 +107,7 @@ export default function OfferPage() {
                     id="size"
                     value={form.size}
                     onChange={handleChange}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
                     required
                   />
                 </div>
@@ -98,7 +123,7 @@ export default function OfferPage() {
                     id="layout"
                     value={form.layout}
                     onChange={handleChange}
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
                     required
                   >
                     <option value="">Select layout</option>
@@ -123,7 +148,7 @@ export default function OfferPage() {
                         name="hasBalcony"
                         checked={form.hasBalcony}
                         onChange={handleChange}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                        className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-600"
                       />
                     </div>
                     <div className="ml-3 text-sm leading-6">
@@ -138,7 +163,7 @@ export default function OfferPage() {
                         name="hasTerrace"
                         checked={form.hasTerrace}
                         onChange={handleChange}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600"
+                        className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-600"
                       />
                     </div>
                     <div className="ml-3 text-sm leading-6">
@@ -160,7 +185,7 @@ export default function OfferPage() {
                     value={form.views}
                     onChange={handleChange}
                     placeholder="e.g., City view, Garden view"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
                   />
                 </div>
               </div>
@@ -177,7 +202,7 @@ export default function OfferPage() {
                     value={form.neighborhood}
                     onChange={handleChange}
                     placeholder="e.g., Downtown, West End"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
                     required
                   />
                 </div>
@@ -195,7 +220,7 @@ export default function OfferPage() {
                     value={form.budget}
                     onChange={handleChange}
                     placeholder="Enter amount"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
                     required
                   />
                 </div>
@@ -213,7 +238,7 @@ export default function OfferPage() {
                     value={form.deposit}
                     onChange={handleChange}
                     placeholder="Enter amount"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
                     required
                   />
                 </div>
@@ -230,8 +255,8 @@ export default function OfferPage() {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="rounded-md bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || !isVerified}
+                className="rounded-md bg-rose-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : 'List Property'}
               </button>
@@ -239,6 +264,6 @@ export default function OfferPage() {
           </form>
         </div>
       </div>
-    </main>
+    </div>
   );
 } 
