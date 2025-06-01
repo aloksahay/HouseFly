@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "akave": {
+      "command": "python",
+      "args": [
+        "-m",
+        "akave_mcp",
+        "--port",
+        "8000",
+        "--host",
+        "0.0.0.0"
+      ],
+      "env": {
+        "AKAVE_O3_ACCESS_KEY_ID": "${AKAVE_O3_ACCESS_KEY_ID}",
+        "AKAVE_O3_SECRET_KEY": "${AKAVE_O3_SECRET_KEY}",
+        "AKAVE_ENDPOINT": "${AKAVE_ENDPOINT}"
+      }
+    }
+  }
+} 
